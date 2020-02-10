@@ -9,3 +9,6 @@
 ### xmall-manager
 *  xmall-manager-service服务端口号：8071
 *  xmall-manager-web服务端口号：8081
+
+### xmall-item
+*  xmall-item-web服务端口号：8082
