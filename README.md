@@ -4,7 +4,7 @@
 -------
 ### xmall-member
 *  xmall-member-service服务端口号：8070
-*  xmall-member-web服务端口号：80
+*  xmall-member-web服务端口号：8080
 
 ### xmall-manager
 *  xmall-manager-service服务端口号：8071
