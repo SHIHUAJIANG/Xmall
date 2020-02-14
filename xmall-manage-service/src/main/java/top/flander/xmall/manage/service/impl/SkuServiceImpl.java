@@ -19,6 +19,7 @@ import top.flander.xmall.manage.mapper.PmsSkuSaleAttrValueMapper;
 import top.flander.xmall.service.SkuService;
 import top.flander.xmall.util.RedisUtil;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @Service
@@ -133,5 +134,18 @@ public class  SkuServiceImpl implements SkuService {
         List<PmsSkuInfo> pmsSkuInfos = pmsSkuInfoMapper.selectSkuSaleAttrValueListBySpu(productId);
 
         return pmsSkuInfos;
+    }
+
+    @Override
+    public List<PmsSkuInfo> getSkuAll() {
+        List<PmsSkuInfo> pmsSkuInfoList = pmsSkuInfoMapper.selectAll();
+        for (PmsSkuInfo pmsSkuInfo : pmsSkuInfoList){
+            String skuId = pmsSkuInfo.getId();
+            PmsSkuAttrValue pmsSkuAttrValue = new PmsSkuAttrValue();
+            pmsSkuAttrValue.setSkuId(skuId);
+            List<PmsSkuAttrValue> pmsSkuAttrValueList = pmsSkuAttrValueMapper.select(pmsSkuAttrValue);
+            pmsSkuInfo.setSkuAttrValueList(pmsSkuAttrValueList);
+        }
+        return pmsSkuInfoList;
     }
 }
