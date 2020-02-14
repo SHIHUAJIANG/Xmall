@@ -12,3 +12,7 @@
 
 ### xmall-item
 *  xmall-item-web服务端口号：8082
+
+### xmall-search
+*  xmall-search-service服务端口号：8073
+*  xmall-search-web服务端口号：8083
