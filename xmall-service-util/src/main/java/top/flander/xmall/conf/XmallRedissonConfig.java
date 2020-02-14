@@ -11,10 +11,10 @@ import org.springframework.context.annotation.Configuration;
 @Configuration
 public class XmallRedissonConfig {
 
-    @Value("spring.redis.host:0")
-    private int host;
-    @Value("spring.redis.port:6379")
-    private int port;
+    @Value("192.168.0.115")
+    private String host;
+    @Value("6379")
+    private String port;
 
     @Bean
     public RedissonClient redissonClient(){
