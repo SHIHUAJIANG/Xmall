@@ -8,14 +8,15 @@ import org.apache.commons.lang3.StringUtils;
 import org.elasticsearch.index.query.BoolQueryBuilder;
 import org.elasticsearch.index.query.MatchQueryBuilder;
 import org.elasticsearch.index.query.TermQueryBuilder;
+import org.elasticsearch.search.aggregations.AggregationBuilders;
+import org.elasticsearch.search.aggregations.bucket.terms.TermsBuilder;
 import org.elasticsearch.search.builder.SearchSourceBuilder;
 import org.elasticsearch.search.highlight.HighlightBuilder;
 import org.elasticsearch.search.sort.SortOrder;
 import org.springframework.beans.factory.annotation.Autowired;
-import top.flander.xmall.bean.PmsSkuAttrValue;
 import top.flander.xmall.bean.SearchParam;
 import top.flander.xmall.bean.SearchSkuInfo;
-import top.flander.xmall.service.SearchParamService;
+import top.flander.xmall.service.SearchService;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -23,13 +24,14 @@ import java.util.List;
 import java.util.Map;
 
 @Service
-public class SearchParamServiceImpl implements SearchParamService {
+public class SearchServiceImpl implements SearchService {
 
     @Autowired
     JestClient jestClient;
 
+
     @Override
-    public List<SearchSkuInfo> getList(SearchParam searchParam) {
+    public List<SearchSkuInfo> list(SearchParam searchParam) {
         String dslStr = getSearchDsl(searchParam);
         System.err.println(dslStr);
         // 用api执行复杂查询
@@ -44,23 +46,23 @@ public class SearchParamServiceImpl implements SearchParamService {
         List<SearchResult.Hit<SearchSkuInfo, Void>> hits = execute.getHits(SearchSkuInfo.class);
         for (SearchResult.Hit<SearchSkuInfo, Void> hit : hits) {
             SearchSkuInfo source = hit.source;
-            System.out.println(hit.highlight);
+
             Map<String, List<String>> highlight = hit.highlight;
-            System.out.println(highlight);
-            String skuName = highlight.get("skuName").get(0);
-            source.setSkuName(skuName);
+            if(highlight!=null){
+                String skuName = highlight.get("skuName").get(0);
+                source.setSkuName(skuName);
+            }
             pmsSearchSkuInfos.add(source);
         }
 
-        System.out.println(pmsSearchSkuInfos.size());
         return pmsSearchSkuInfos;
     }
 
-    private String getSearchDsl(SearchParam pmsSearchParam) {
+    private String getSearchDsl(SearchParam searchParam) {
 
-        List<PmsSkuAttrValue> skuAttrValueList = pmsSearchParam.getSkuAttrValueList();
-        String keyword = pmsSearchParam.getKeyword();
-        String catalog3Id = pmsSearchParam.getCatalog3Id();
+        String[] skuAttrValueList = searchParam.getValueId();
+        String keyword = searchParam.getKeyword();
+        String catalog3Id = searchParam.getCatalog3Id();
 
         // jest的dsl工具
         SearchSourceBuilder searchSourceBuilder = new SearchSourceBuilder();
@@ -73,8 +75,8 @@ public class SearchParamServiceImpl implements SearchParamService {
             boolQueryBuilder.filter(termQueryBuilder);
         }
         if(skuAttrValueList!=null){
-            for (PmsSkuAttrValue pmsSkuAttrValue : skuAttrValueList) {
-                TermQueryBuilder termQueryBuilder = new TermQueryBuilder("skuAttrValueList.valueId",pmsSkuAttrValue.getValueId());
+            for (String pmsSkuAttrValue : skuAttrValueList) {
+                TermQueryBuilder termQueryBuilder = new TermQueryBuilder("skuAttrValueList.valueId",pmsSkuAttrValue);
                 boolQueryBuilder.filter(termQueryBuilder);
             }
         }
@@ -95,11 +97,17 @@ public class SearchParamServiceImpl implements SearchParamService {
         highlightBuilder.postTags("</span>");
         searchSourceBuilder.highlight(highlightBuilder);
         // sort
-        searchSourceBuilder.sort("id", SortOrder.DESC);
+        searchSourceBuilder.sort("id",SortOrder.DESC);
         // from
         searchSourceBuilder.from(0);
         // size
         searchSourceBuilder.size(20);
+
+
+        // aggs
+        TermsBuilder groupby_attr = AggregationBuilders.terms("groupby_attr").field("skuAttrValueList.valueId");
+        searchSourceBuilder.aggregation(groupby_attr);
+
 
         return searchSourceBuilder.toString();
 
